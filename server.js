@@ -27,10 +27,12 @@ app.get('/', (req, res) => {
     const cantidad = req.query.cantidad || '';
     const precio_unitario = req.query.precio_unitario || '';
     
-    // Calcular total
-    const total = cantidad && precio_unitario 
-        ? (parseFloat(cantidad) * parseFloat(precio_unitario)).toFixed(2) 
-        : '0.00';
+    // Calcular valores
+    const cantidadNum = parseFloat(cantidad) || 0;
+    const precioNum = parseFloat(precio_unitario) || 0;
+    const subtotal = (cantidadNum * precioNum).toFixed(2);
+    const iva = (parseFloat(subtotal) * 0.16).toFixed(2);
+    const total = (parseFloat(subtotal) + parseFloat(iva)).toFixed(2);
     
     // Leer el HTML
     let html = fs.readFileSync(path.join(__dirname, 'views', 'index.html'), 'utf8');
@@ -38,8 +40,10 @@ app.get('/', (req, res) => {
     // Reemplazar placeholders
     html = html.replace(/{{producto}}/g, producto);
     html = html.replace(/{{cantidad}}/g, cantidad);
-    html = html.replace(/{{precio_unitario}}/g, precio_unitario ? parseFloat(precio_unitario).toFixed(2) : '0.00');
+    html = html.replace(/{{precio_unitario}}/g, precioNum.toFixed(2));
     html = html.replace(/{{precio_unitario_raw}}/g, precio_unitario);
+    html = html.replace(/{{subtotal}}/g, subtotal);
+    html = html.replace(/{{iva}}/g, iva);
     html = html.replace(/{{total}}/g, total);
     
     res.send(html);
