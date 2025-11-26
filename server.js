@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static('public')); // Servir archivos estáticos (CSS, JS)
+app.use(express.static('public')); 
 
 // Credenciales Facturama SANDBOX
 const FACTURAMA_USER = 'pruebafactura123';
@@ -131,7 +131,6 @@ app.post('/generar-factura', async (req, res) => {
             }]
         };
 
-        console.log('Enviando factura a Facturama...');
 
         // Timbrar factura en Facturama
         const response = await axios.post(
@@ -146,8 +145,7 @@ app.post('/generar-factura', async (req, res) => {
             }
         );
 
-        console.log('Factura timbrada exitosamente');
-
+    
         // Verificar ID de factura
         if (!response.data || !response.data.Id) {
             return res.json({
@@ -171,7 +169,6 @@ app.post('/generar-factura', async (req, res) => {
                     timeout: 40000
                 }
             );
-            console.log('Email enviado exitosamente');
         } catch (emailError) {
             console.error('Error al enviar email:', emailError.message);
         }
@@ -194,8 +191,4 @@ app.post('/generar-factura', async (req, res) => {
     }
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-    console.log(`📝 Ejemplo: http://localhost:${PORT}?producto=Gafas&cantidad=2&precio_unitario=3500`);
-});
+app.listen(PORT);

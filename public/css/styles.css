@@ -316,21 +316,3 @@ select:focus {
         letter-spacing: 6px;
     }
 }
-
-/* Scrollbar personalizado */
-.left-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.left-panel::-webkit-scrollbar-track {
-    background: #f0f0f0;
-}
-
-.left-panel::-webkit-scrollbar-thumb {
-    background: #cccccc;
-    border-radius: 3px;
-}
-
-.left-panel::-webkit-scrollbar-thumb:hover {
-    background: #999999;
-}
