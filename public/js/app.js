@@ -20,7 +20,7 @@ document.getElementById('facturaForm').addEventListener('submit', async (e) => {
         // Convertir FormData a URLSearchParams para enviarlo como application/x-www-form-urlencoded
         const urlParams = new URLSearchParams(formData);
         
-        const response = await fetch('/generar-factura', {
+        const response = await fetch('generar-factura', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
