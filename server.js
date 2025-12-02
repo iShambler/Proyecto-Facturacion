@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static('public')); 
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Credenciales Facturama SANDBOX
 const FACTURAMA_USER = 'pruebafactura123';
