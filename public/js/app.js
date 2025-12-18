@@ -1,3 +1,15 @@
+// Mostrar número de ticket si existe
+window.addEventListener('DOMContentLoaded', () => {
+    const ticketInput = document.getElementById('numeroTicket');
+    const ticketDisplay = document.getElementById('ticketNumber');
+    const ticketNum = document.getElementById('ticketNum');
+    
+    if (ticketInput && ticketInput.value) {
+        ticketNum.textContent = ticketInput.value;
+        ticketDisplay.style.display = 'block';
+    }
+});
+
 document.getElementById('facturaForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     

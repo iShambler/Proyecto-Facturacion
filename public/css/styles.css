@@ -279,6 +279,47 @@ select:focus {
     color: #86181d;
 }
 
+/* Estilos para preview de ticket */
+.preview-ticket {
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+.preview-ticket span {
+    font-weight: 700;
+    color: #000;
+}
+
+/* Estilos para líneas de productos */
+.preview-item {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #e0e0e0;
+}
+
+.preview-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.preview-row-small {
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.preview-label-small {
+    color: #666;
+    font-size: 12px;
+}
+
+.preview-value-small {
+    font-weight: 600;
+    color: #000;
+    font-size: 13px;
+}
+
 /* RESPONSIVE */
 @media (max-width: 1200px) {
     .container {

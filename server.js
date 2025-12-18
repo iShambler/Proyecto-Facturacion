@@ -22,29 +22,79 @@ const authToken = Buffer.from(`${FACTURAMA_USER}:${FACTURAMA_PASSWORD}`).toStrin
 
 // Ruta principal - Mostrar formulario
 app.get('/', (req, res) => {
-    // Obtener parámetros de la URL
-    const producto = req.query.producto || '';
-    const cantidad = req.query.cantidad || '';
-    const precio_unitario = req.query.precio_unitario || '';
+    let lineas = [];
+    let numeroTicket = req.query.ticket || '';
     
-    // Calcular valores
-    const cantidadNum = parseFloat(cantidad) || 0;
-    const precioNum = parseFloat(precio_unitario) || 0;
-    const subtotal = (cantidadNum * precioNum).toFixed(2);
-    const iva = (parseFloat(subtotal) * 0.16).toFixed(2);
-    const total = (parseFloat(subtotal) + parseFloat(iva)).toFixed(2);
+    console.log('[DEBUG] Query params:', JSON.stringify(req.query, null, 2));
+    
+    // CASO 1: Múltiples productos (producto[0], producto[1], etc.)
+    // Express parsea producto[0] como un objeto: req.query['producto[0]']
+    let tieneMultiples = false;
+    for (let key in req.query) {
+        if (key.startsWith('producto[')) {
+            tieneMultiples = true;
+            break;
+        }
+    }
+    
+    if (tieneMultiples) {
+        let index = 0;
+        while (req.query[`producto[${index}]`]) {
+            lineas.push({
+                producto: req.query[`producto[${index}]`] || '',
+                cantidad: parseFloat(req.query[`cantidad[${index}]`]) || 0,
+                precio_unitario: parseFloat(req.query[`precio[${index}]`]) || 0
+            });
+            index++;
+        }
+        console.log('[DEBUG] Productos múltiples parseados:', lineas.length);
+    }
+    // CASO 2: Un solo producto (compatibilidad hacia atrás)
+    else if (req.query.producto) {
+        lineas.push({
+            producto: req.query.producto || '',
+            cantidad: parseFloat(req.query.cantidad) || 0,
+            precio_unitario: parseFloat(req.query.precio_unitario) || 0
+        });
+        console.log('[DEBUG] Producto único parseado');
+    }
+    
+    // Calcular totales
+    let subtotalTotal = 0;
+    lineas.forEach(linea => {
+        linea.subtotal = linea.cantidad * linea.precio_unitario;
+        subtotalTotal += linea.subtotal;
+    });
+    
+    const ivaTotal = subtotalTotal * 0.16;
+    const total = subtotalTotal + ivaTotal;
     
     // Leer el HTML
     let html = fs.readFileSync(path.join(__dirname, 'views', 'index.html'), 'utf8');
     
+    // Generar HTML de líneas de productos
+    let lineasHtml = '';
+    lineas.forEach((linea, index) => {
+        lineasHtml += `
+            <div class="preview-item" data-index="${index}">
+                <div class="preview-row">
+                    <span class="preview-label">${index + 1}. ${linea.producto}</span>
+                </div>
+                <div class="preview-row preview-row-small">
+                    <span class="preview-label-small">${linea.cantidad} × ${linea.precio_unitario.toFixed(2)}</span>
+                    <span class="preview-value-small">${linea.subtotal.toFixed(2)} MXN</span>
+                </div>
+            </div>
+        `;
+    });
+    
     // Reemplazar placeholders
-    html = html.replace(/{{producto}}/g, producto);
-    html = html.replace(/{{cantidad}}/g, cantidad);
-    html = html.replace(/{{precio_unitario}}/g, precioNum.toFixed(2));
-    html = html.replace(/{{precio_unitario_raw}}/g, precio_unitario);
-    html = html.replace(/{{subtotal}}/g, subtotal);
-    html = html.replace(/{{iva}}/g, iva);
-    html = html.replace(/{{total}}/g, total);
+    html = html.replace('{{lineas_productos}}', lineasHtml);
+    html = html.replace('{{lineas_json}}', JSON.stringify(lineas));
+    html = html.replace('{{numero_ticket}}', numeroTicket);
+    html = html.replace('{{subtotal}}', subtotalTotal.toFixed(2));
+    html = html.replace('{{iva}}', ivaTotal.toFixed(2));
+    html = html.replace('{{total}}', total.toFixed(2));
     
     res.send(html);
 });
@@ -54,9 +104,8 @@ app.post('/generar-factura', async (req, res) => {
     try {
         // Extraer datos del formulario
         const {
-            producto,
-            cantidad,
-            precio_unitario_raw,
+            lineas_json,
+            numero_ticket,
             rfc,
             nombre,
             cp_receptor,
@@ -66,16 +115,30 @@ app.post('/generar-factura', async (req, res) => {
         } = req.body;
 
         // Validar datos requeridos
-        if (!producto || !cantidad || !precio_unitario_raw || !rfc || !nombre || !cp_receptor || !regimen || !uso_cfdi || !email) {
+        if (!lineas_json || !rfc || !nombre || !cp_receptor || !regimen || !uso_cfdi || !email) {
             return res.json({
                 success: false,
                 message: 'Faltan datos requeridos'
             });
         }
 
-        // Convertir a números
-        const cantidadNum = parseFloat(cantidad);
-        const precioUnitario = parseFloat(precio_unitario_raw);
+        // Parsear líneas de productos
+        let lineas;
+        try {
+            lineas = JSON.parse(lineas_json);
+        } catch (e) {
+            return res.json({
+                success: false,
+                message: 'Error al procesar los productos'
+            });
+        }
+
+        if (!lineas || lineas.length === 0) {
+            return res.json({
+                success: false,
+                message: 'No hay productos para facturar'
+            });
+        }
 
         // Normalizar datos
         const rfcNormalizado = rfc.toUpperCase();
@@ -90,10 +153,41 @@ app.post('/generar-factura', async (req, res) => {
             usoCfdi = "S01";
         }
 
-        // Cálculos
-        const subtotal = cantidadNum * precioUnitario;
-        const iva = subtotal * 0.16;
-        const total = subtotal + iva;
+        // Construir Items del CFDI (una por cada línea de producto)
+        const items = [];
+        let subtotalTotal = 0;
+        let ivaTotal = 0;
+        
+        lineas.forEach(linea => {
+            const subtotal = linea.cantidad * linea.precio_unitario;
+            const iva = subtotal * 0.16;
+            const total = subtotal + iva;
+            
+            subtotalTotal += subtotal;
+            ivaTotal += iva;
+            
+            items.push({
+                ProductCode: "10111302",
+                Description: linea.producto,
+                UnitCode: "H87",
+                Unit: "Pieza",
+                Quantity: linea.cantidad,
+                UnitPrice: linea.precio_unitario,
+                Subtotal: subtotal,
+                TaxObject: "02",
+                Taxes: [{
+                    Total: iva,
+                    Name: "IVA",
+                    Base: subtotal,
+                    Rate: 0.16,
+                    IsRetention: false,
+                    IsFederalTax: true
+                }],
+                Total: total
+            });
+        });
+
+        const totalTotal = subtotalTotal + ivaTotal;
 
         // Construir CFDI JSON
         const facturaData = {
@@ -110,26 +204,13 @@ app.post('/generar-factura', async (req, res) => {
             PaymentForm: "03",
             PaymentMethod: "PUE",
             Exportation: "01",
-            Items: [{
-                ProductCode: "10111302",
-                Description: producto,
-                UnitCode: "H87",
-                Unit: "Pieza",
-                Quantity: cantidadNum,
-                UnitPrice: precioUnitario,
-                Subtotal: subtotal,
-                TaxObject: "02",
-                Taxes: [{
-                    Total: iva,
-                    Name: "IVA",
-                    Base: subtotal,
-                    Rate: 0.16,
-                    IsRetention: false,
-                    IsFederalTax: true
-                }],
-                Total: total
-            }]
+            Items: items
         };
+        
+        // Añadir número de ticket si existe (como Observaciones)
+        if (numero_ticket) {
+            facturaData.Observations = `Ticket: ${numero_ticket}`;
+        }
 
 
         // Timbrar factura en Facturama

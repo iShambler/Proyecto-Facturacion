@@ -103,10 +103,9 @@
                     </div>
                 </div>
 
-                <!-- Campos ocultos del producto -->
-                <input type="hidden" name="producto" value="{{producto}}">
-                <input type="hidden" name="cantidad" value="{{cantidad}}">
-                <input type="hidden" name="precio_unitario_raw" value="{{precio_unitario_raw}}">
+                <!-- Campos ocultos -->
+                <input type="hidden" name="lineas_json" id="lineasJson" value="{{lineas_json}}">
+                <input type="hidden" name="numero_ticket" id="numeroTicket" value="{{numero_ticket}}">
 
                 <button type="submit" class="btn-submit" id="btnSubmit">Generar Factura</button>
                 <div class="loading" id="loading">
@@ -121,25 +120,15 @@
             <div class="preview-header">
                 <img src="img/LOGO_MO_MEXICO_dark.webp" alt="Logo" style="max-width: 120px; height: auto; margin-bottom: 15px;">
                 <div class="preview-title">Resumen de Compra</div>
+                <div class="preview-ticket" id="ticketNumber" style="display: none;">Ticket: <span id="ticketNum"></span></div>
             </div>
 
             <div class="preview-content">
                 <div class="preview-section">
-                    <div class="preview-section-title">Producto</div>
+                    <div class="preview-section-title">Productos</div>
                     
-                    <div class="preview-row">
-                        <span class="preview-label">Descripción</span>
-                        <span class="preview-value">{{producto}}</span>
-                    </div>
-                    
-                    <div class="preview-row">
-                        <span class="preview-label">Cantidad</span>
-                        <span class="preview-value">{{cantidad}}</span>
-                    </div>
-                    
-                    <div class="preview-row">
-                        <span class="preview-label">Precio Unitario</span>
-                        <span class="preview-value">${{precio_unitario}} MXN</span>
+                    <div id="lineasProductos">
+                        {{lineas_productos}}
                     </div>
                     
                     <div style="border-top: 1px solid #e0e0e0; margin: 20px 0;"></div>
