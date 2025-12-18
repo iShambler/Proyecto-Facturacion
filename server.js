@@ -68,22 +68,18 @@ app.get('/', (req, res) => {
     // Generar HTML de líneas de productos
     let lineasHtml = '';
     lineas.forEach((linea, index) => {
-        lineasHtml += `
-            <div class="preview-item" data-index="${index}">
-                <div class="preview-row">
-                    <span class="preview-label">${index + 1}. ${linea.producto}</span>
-                </div>
-                <div class="preview-row preview-row-small">
-                    <span class="preview-label-small">${linea.cantidad} × ${linea.precio_unitario.toFixed(2)}</span>
-                    <span class="preview-value-small">${linea.subtotal.toFixed(2)} MXN</span>
-                </div>
-            </div>
-        `;
+        lineasHtml += `<div class="preview-item" data-index="${index}"><div class="preview-row"><span class="preview-label">${index + 1}. ${linea.producto}</span></div><div class="preview-row preview-row-small"><span class="preview-label-small">${linea.cantidad} × ${linea.precio_unitario.toFixed(2)}</span><span class="preview-value-small">${linea.subtotal.toFixed(2)} MXN</span></div></div>`;
     });
     
     // Reemplazar placeholders
     html = html.replace('{{lineas_productos}}', lineasHtml);
-    html = html.replace('{{lineas_json}}', JSON.stringify(lineas));
+    
+    // Escapar el JSON para que no rompa el HTML
+    const lineasJsonEscaped = JSON.stringify(lineas)
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    
+    html = html.replace('{{lineas_json}}', lineasJsonEscaped);
     html = html.replace('{{numero_ticket}}', numeroTicket);
     html = html.replace('{{subtotal}}', subtotalTotal.toFixed(2));
     html = html.replace('{{iva}}', ivaTotal.toFixed(2));
@@ -116,13 +112,24 @@ app.post('/generar-factura', async (req, res) => {
         }
 
         // Parsear líneas de productos
+        console.log('[DEBUG POST] lineas_json recibido:', lineas_json);
+        console.log('[DEBUG POST] Tipo:', typeof lineas_json);
+        
+        // Desescapar el HTML del JSON
+        const lineasJsonUnescaped = lineas_json
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'");
+        
         let lineas;
         try {
-            lineas = JSON.parse(lineas_json);
+            lineas = JSON.parse(lineasJsonUnescaped);
+            console.log('[DEBUG POST] Líneas parseadas correctamente:', lineas.length);
         } catch (e) {
+            console.error('[ERROR POST] Error al parsear JSON:', e.message);
+            console.error('[ERROR POST] JSON problemático:', lineasJsonUnescaped);
             return res.json({
                 success: false,
-                message: 'Error al procesar los productos'
+                message: 'Error al procesar los productos: ' + e.message
             });
         }
 

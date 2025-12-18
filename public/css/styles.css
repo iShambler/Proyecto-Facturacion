@@ -219,7 +219,6 @@ select:focus {
 .preview-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 18px;
     font-size: 12px;
 }
 
@@ -294,8 +293,8 @@ select:focus {
 
 /* Estilos para líneas de productos */
 .preview-item {
-    margin-bottom: 15px;
-    padding-bottom: 12px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
     border-bottom: 1px dashed #e0e0e0;
 }
 
@@ -306,7 +305,7 @@ select:focus {
 
 .preview-row-small {
     font-size: 13px;
-    margin-top: 4px;
+    margin-top: 0;
 }
 
 .preview-label-small {

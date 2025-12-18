@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <base href="/api-facturacion/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitar Factura</title>
-<link rel="stylesheet" href="/css/styles.css">
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <div class="container">
@@ -18,7 +19,7 @@
             <div id="alertSuccess" class="alert alert-success"></div>
             <div id="alertError" class="alert alert-error"></div>
 
-            <form id="facturaForm" method="POST" action="/generar-factura">
+            <form id="facturaForm" method="POST" action="generar-factura">
                 <div class="form-section">
                     <h2 class="section-title">Datos Fiscales</h2>
                     
@@ -117,7 +118,7 @@
         <!-- PANEL DERECHO: PREVIEW DEL TICKET -->
         <div class="right-panel">
             <div class="preview-header">
-                <img src="/img/LOGO_MO_MEXICO_dark.webp" alt="Logo" style="max-width: 120px; height: auto; margin-bottom: 15px;">
+                <img src="img/LOGO_MO_MEXICO_dark.webp" alt="Logo" style="max-width: 120px; height: auto; margin-bottom: 15px;">
                 <div class="preview-title">Resumen de Compra</div>
                 <div class="preview-ticket" id="ticketNumber" style="display: none;">Ticket: <span id="ticketNum"></span></div>
             </div>
@@ -151,6 +152,6 @@
         </div>
     </div>
 
-    <script src="/js/app.js"></script>
+    <script src="js/app.js"></script>
 </body> 
 </html>
