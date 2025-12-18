@@ -27,34 +27,27 @@ app.get('/', (req, res) => {
     
     console.log('[DEBUG] Query params:', JSON.stringify(req.query, null, 2));
     
-    // CASO 1: Múltiples productos (producto[0], producto[1], etc.)
-    // Express parsea producto[0] como un objeto: req.query['producto[0]']
-    let tieneMultiples = false;
-    for (let key in req.query) {
-        if (key.startsWith('producto[')) {
-            tieneMultiples = true;
-            break;
-        }
-    }
-    
-    if (tieneMultiples) {
-        let index = 0;
-        while (req.query[`producto[${index}]`]) {
+    // CASO 1: Múltiples productos (Express parsea automáticamente como arrays)
+    if (Array.isArray(req.query.producto)) {
+        const productos = req.query.producto;
+        const cantidades = Array.isArray(req.query.cantidad) ? req.query.cantidad : [req.query.cantidad];
+        const precios = Array.isArray(req.query.precio) ? req.query.precio : [req.query.precio];
+        
+        for (let i = 0; i < productos.length; i++) {
             lineas.push({
-                producto: req.query[`producto[${index}]`] || '',
-                cantidad: parseFloat(req.query[`cantidad[${index}]`]) || 0,
-                precio_unitario: parseFloat(req.query[`precio[${index}]`]) || 0
+                producto: productos[i] || '',
+                cantidad: parseFloat(cantidades[i]) || 0,
+                precio_unitario: parseFloat(precios[i]) || 0
             });
-            index++;
         }
-        console.log('[DEBUG] Productos múltiples parseados:', lineas.length);
+        console.log('[DEBUG] Productos múltiples parseados (arrays):', lineas.length);
     }
     // CASO 2: Un solo producto (compatibilidad hacia atrás)
     else if (req.query.producto) {
         lineas.push({
             producto: req.query.producto || '',
             cantidad: parseFloat(req.query.cantidad) || 0,
-            precio_unitario: parseFloat(req.query.precio_unitario) || 0
+            precio_unitario: parseFloat(req.query.precio_unitario || req.query.precio) || 0
         });
         console.log('[DEBUG] Producto único parseado');
     }
